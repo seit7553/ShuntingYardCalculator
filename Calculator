@@ -1,0 +1,77 @@
+package com.sarahseitz.calculator.demo;
+
+import java.util.Stack;
+
+public class Calculator {
+    private String enteredCalculation;
+    public Calculator(String enteredCalculation) {
+        this.enteredCalculation = enteredCalculation;
+    }
+
+    public String getEnteredCalculation() {
+        return enteredCalculation;
+    }
+
+    public void setEnteredCalculation(String enteredCalculation) {
+        this.enteredCalculation = enteredCalculation;
+    }
+
+    public static int evaluateExpression(String enteredExpression) {
+        char[] tokens = enteredExpression.toCharArray();
+        Stack<Integer> operands = new Stack<Integer>();
+        Stack<Character> operators = new Stack<Character>();
+        for (int i=0; i< tokens.length; i++) {
+            if (tokens[i] == ' ')
+                continue;
+            if (tokens[i] >= '0' && tokens[i] <= '9') {
+                StringBuffer stringBuffer = new StringBuffer();
+                while (i < tokens.length && tokens[i] >= '0' && tokens[i] <= '9')
+                    stringBuffer.append(tokens[i++]);
+                operands.push(Integer.parseInt(stringBuffer.toString()));
+            }
+            else if (tokens[i] == '(')
+                operators.push(tokens[i]);
+            else if (tokens[i] == ')') {
+                while (operators.peek() != '(')
+                    operands.push(applyOperator(operators.pop(), operands.pop(), operands.pop()));
+                operators.pop();
+            }
+            else if (tokens[i] == '+' || tokens[i] == '-' ||
+                     tokens[i] == '*' || tokens[i] == '/') {
+                while (!operators.empty() && operatorHasPrec(tokens[i], operators.peek()))
+                    operands.push(applyOperator(operators.pop(), operands.pop(), operands.pop()));
+                operators.push(tokens[i]);
+            }
+        }
+
+        while (!operators.empty())
+            operands.push(applyOperator(operators.pop(), operands.pop(), operands.pop()));
+        return operands.pop();
+    }
+
+    private static boolean operatorHasPrec(char firstOperator, char secondOperator) {
+        if (secondOperator == '(' || secondOperator == ')')
+            return false;
+        if ((firstOperator == '*' || firstOperator == '/') && (secondOperator == '+' || secondOperator == '-'))
+            return false;
+        else
+            return true;
+    }
+
+    private static int applyOperator(char operator, int secondOperand, int firstOperand) {
+        switch(operator) {
+            case '+':
+                return firstOperand + secondOperand;
+            case '-':
+                return firstOperand - secondOperand;
+            case '*':
+                return firstOperand * secondOperand;
+            case '/':
+                if (secondOperand == 0)
+                    throw new
+                            UnsupportedOperationException("Cannot divide by zero");
+                return firstOperand / secondOperand;
+            }
+            return 0;
+        }
+    }
